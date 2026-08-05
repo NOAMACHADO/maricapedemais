@@ -81,44 +81,34 @@
         leitor.readAsDataURL(arquivo);
     });
 
-   function desenharTudo() {
+ function desenharTudo() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
+    // 1. Desenha a moldura completa ao fundo (com logo e fundo preto)
+    ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
+    
     if (fotoUsuario) {
-        // 1. Desenha a foto do usuário recortada no círculo
+        // 2. Desenha a foto do usuário por cima, recortada em círculo perfeito
         ctx.save();
         ctx.beginPath();
-        ctx.arc(centroX, centroY, raioCírculo, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.clip();
-        ctx.drawImage(fotoUsuario, fotoX, fotoY, fotoLargura, fotoAltura);
-        ctx.restore();
-
-        // 2. Faz o recorte vazado na moldura (remove o miolo)
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(0, 0, canvas.width, canvas.height);
-        ctx.arc(centroX, centroY, raioCírculo - 5, 0, Math.PI * 2, true);
-        ctx.closePath();
-        ctx.clip();
-        ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
-        ctx.restore();
-
-        // 3. Desenha APENAS as letras do logo por cima (cortando em círculo para não criar bloco preto)
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(centroX, centroY, raioCírculo, 0, Math.PI * 2);
+        ctx.arc(centroX, centroY, raioCírculo - 5, 0, Math.PI * 2);
         ctx.closePath();
         ctx.clip();
         
-        // Pega só a faixa inferior onde fica o logo sem invadir as laterais
+        ctx.drawImage(fotoUsuario, fotoX, fotoY, fotoLargura, fotoAltura);
+        ctx.restore();
+        
+        // 3. Desenha APENAS o contorno das letras do logo por cima da foto (usando máscara redonda)
+        ctx.save();
         ctx.beginPath();
-        ctx.rect(200, 750, 600, 250);
+        // Limita o desenho à área onde o logo cruza o círculo
+        ctx.arc(centroX, centroY, raioCírculo + 10, 0, Math.PI * 2);
         ctx.clip();
+        
+        // Aplica o modo de mesclagem para sobrepor apenas as partes claras do logo (texto branco/amarelo)
+        ctx.globalCompositeOperation = 'screen';
         ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
         ctx.restore();
-    } else {
-        ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
     }
 }
 
