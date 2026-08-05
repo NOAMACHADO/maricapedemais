@@ -45,7 +45,7 @@
     let arrastando = false;
     let inicioX, inicioY;
 
-    // Coordenadas do centro do círculo
+    // Posição exata do círculo da sua arte original
     const centroX = 500;
     const centroY = 460;
     const raioCírculo = 425;
@@ -84,19 +84,30 @@
     function desenharTudo() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // 1. Desenha primeiro a foto do usuário recortada no círculo
+        // 1. Desenha a imagem da moldura completa primeiro
+        ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
+        
         if (fotoUsuario) {
+            // 2. Apaga o centro preto da moldura para dar lugar à foto
             ctx.save();
             ctx.beginPath();
-            ctx.arc(centroX, centroY, raioCírculo, 0, Math.PI * 2);
-            ctx.closePath();
+            ctx.arc(centroX, centroY, raioCírculo - 10, 0, Math.PI * 2);
             ctx.clip();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 3. Desenha a foto do usuário na área apagada
             ctx.drawImage(fotoUsuario, fotoX, fotoY, fotoLargura, fotoAltura);
             ctx.restore();
+            
+            // 4. Desenha apenas o pedaço inferior da moldura (onde fica o logo) por cima da foto
+            ctx.save();
+            ctx.beginPath();
+            // Área retangular focada na parte do logo na parte inferior
+            ctx.rect(0, 750, 1000, 250); 
+            ctx.clip();
+            ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
         }
-        
-        // 2. Desenha a moldura por CIMA (com fundo escuro + logo + miolo vazado)
-        ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
     }
 
     // --- SISTEMA DE ARRASTAR ---
