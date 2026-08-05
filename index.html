@@ -81,44 +81,46 @@
         leitor.readAsDataURL(arquivo);
     });
 
-    function desenharTudo() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+   function desenharTudo() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    if (fotoUsuario) {
+        // 1. Desenha a foto do usuário recortada no círculo
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(centroX, centroY, raioCírculo, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(fotoUsuario, fotoX, fotoY, fotoLargura, fotoAltura);
+        ctx.restore();
+
+        // 2. Faz o recorte vazado na moldura (remove o miolo)
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 0, canvas.width, canvas.height);
+        ctx.arc(centroX, centroY, raioCírculo - 5, 0, Math.PI * 2, true);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
+        ctx.restore();
+
+        // 3. Desenha APENAS as letras do logo por cima (cortando em círculo para não criar bloco preto)
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(centroX, centroY, raioCírculo, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
         
-        if (fotoUsuario) {
-            // 1. Desenha a foto do usuário recortada no círculo
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(centroX, centroY, raioCírculo, 0, Math.PI * 2);
-            ctx.closePath();
-            ctx.clip();
-            ctx.drawImage(fotoUsuario, fotoX, fotoY, fotoLargura, fotoAltura);
-            ctx.restore();
-
-            // 2. Cria uma máscara vazada na moldura (remove o meio)
-            ctx.save();
-            ctx.beginPath();
-            ctx.rect(0, 0, canvas.width, canvas.height);
-            ctx.arc(centroX, centroY, raioCírculo - 5, 0, Math.PI * 2, true);
-            ctx.closePath();
-            ctx.clip();
-            
-            // Desenha a parte externa da moldura por cima da foto
-            ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
-            ctx.restore();
-
-            // 3. Redesenha a área do logo "FOCO NO FUTURO" por cima de tudo
-            ctx.save();
-            ctx.beginPath();
-            ctx.rect(200, 700, 600, 300); // Foco na caixa do logo
-            ctx.closePath();
-            ctx.clip();
-            ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
-            ctx.restore();
-        } else {
-            // Se nenhuma foto foi enviada, desenha a moldura normal
-            ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
-        }
+        // Pega só a faixa inferior onde fica o logo sem invadir as laterais
+        ctx.beginPath();
+        ctx.rect(200, 750, 600, 250);
+        ctx.clip();
+        ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
+        ctx.restore();
+    } else {
+        ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
     }
+}
 
     // --- SISTEMA DE ARRASTAR ---
     function obterCoordenadas(e) {
