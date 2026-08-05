@@ -38,16 +38,16 @@
     const btnDownload = document.getElementById('btnDownload');
 
     const imagemMoldura = new Image();
-    imagemMoldura.src = 'moldura.png'; // Nome exato do seu arquivo de imagem
+    imagemMoldura.src = 'moldura.png';
 
     let fotoUsuario = null;
     let fotoX = 0, fotoY = 0, fotoLargura = 0, fotoAltura = 0;
     let arrastando = false;
     let inicioX, inicioY;
 
-    // Definições do círculo dourado da sua imagem (ajustado para o tamanho 1000x1000)
+    // Coordenadas ajustadas para o centro (1000x1000)
     const centroX = 500;
-    const centroY = 460;
+    const centroY = 500;
     const raioCírculo = 425;
 
     imagemMoldura.onload = desenharTudo;
@@ -62,7 +62,6 @@
             fotoUsuario.onload = function() {
                 const proporcao = fotoUsuario.width / fotoUsuario.height;
                 
-                // Força a foto a preencher a área do círculo
                 if (proporcao > 1) {
                     fotoAltura = raioCírculo * 2;
                     fotoLargura = fotoAltura * proporcao;
@@ -71,7 +70,6 @@
                     fotoAltura = fotoLargura / proporcao;
                 }
                 
-                // Centraliza inicialmente a foto dentro do círculo dourado
                 fotoX = centroX - (fotoLargura / 2);
                 fotoY = centroY - (fotoAltura / 2);
                 
@@ -84,29 +82,27 @@
     });
 
     function desenharTudo() {
+        // Limpa o canvas a cada redesenho
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // 1. Desenha o fundo preto da moldura primeiro para cobrir as bordas do recorte
-        ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
-        
-        // 2. Se o usuário subiu a foto, fazemos o recorte redondo perfeito
+        // 1. Desenha a foto do usuário recortada em círculo primeiro
         if (fotoUsuario) {
-            ctx.save(); // Salva o estado do canvas
+            ctx.save();
             
-            // Cria a máscara redonda baseada no seu anel dourado
             ctx.beginPath();
             ctx.arc(centroX, centroY, raioCírculo, 0, Math.PI * 2);
             ctx.closePath();
-            ctx.clip(); // Tudo desenhado após isso ficará apenas dentro do círculo
+            ctx.clip(); // Limita o desenho ao círculo
             
-            // Desenha a foto do usuário
             ctx.drawImage(fotoUsuario, fotoX, fotoY, fotoLargura, fotoAltura);
             
-            ctx.restore(); // Restaura o canvas para o estado normal
-            
-            // 3. Desenha a moldura DE NOVO por cima para garantir que o texto e os brilhos fiquem na frente da foto
-            ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
         }
+        
+        // 2. Desenha a moldura por cima
+        // O modo 'source-over' garante que a moldura sobreponha a foto
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
     }
 
     // --- SISTEMA DE ARRASTAR ---
