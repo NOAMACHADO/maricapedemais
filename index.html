@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Campanha - Foco no Futuro</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; text-align: center; margin: 0; padding: 15px; background-color: #111; color: #fff; }
+        .container { max-width: 450px; margin: 0 auto; background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); box-sizing: border-box; border: 1px solid #333; }
+        h2 { margin-top: 0; color: #ffb703; font-size: 22px; }
+        p { font-size: 14px; color: #aaa; margin-bottom: 20px; line-height: 1.4; }
+        canvas { border: 1px solid #444; max-width: 100%; height: auto; border-radius: 8px; cursor: move; display: block; margin: 15px auto; background: #000; touch-action: none; }
+        .btn { display: inline-block; padding: 14px 24px; font-size: 16px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; width: 100%; box-sizing: border-box; text-decoration: none; text-align: center; }
+        .btn-upload { background-color: #ffb703; color: #000; margin-bottom: 10px; }
+        .btn-download { background-color: #16a34a; color: white; display: none; }
+        .btn:hover { opacity: 0.9; }
+        input[type="file"] { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Foto de Perfil - Foco no Futuro</h2>
+    <p>1. Clique no botão amarelo para escolher sua foto.<br>2. Arraste com o dedo ou mouse para enquadrar seu rosto no círculo.<br>3. Clique em baixar.</p>
+    
+    <label for="uploadFoto" class="btn btn-upload">Selecionar Minha Foto</label>
+    <input type="file" id="uploadFoto" accept="image/*">
+    
+    <canvas id="meuCanvas" width="1000" height="1000"></canvas>
+    
+    <a id="btnDownload" class="btn btn-download" href="#">Baixar Foto Pronta</a>
+</div>
+
+<script>
+    const canvas = document.getElementById('meuCanvas');
+    const ctx = canvas.getContext('2d');
+    const uploadFoto = document.getElementById('uploadFoto');
+    const btnDownload = document.getElementById('btnDownload');
+
+    const imagemMoldura = new Image();
+    imagemMoldura.src = 'moldura.png';
+
+    let fotoUsuario = null;
+    let fotoX = 0, fotoY = 0, fotoLargura = 0, fotoAltura = 0;
+    let arrastando = false;
+    let inicioX, inicioY;
+
+    // Coordenadas do centro do círculo
+    const centroX = 500;
+    const centroY = 460;
+    const raioCírculo = 410;
+
+    imagemMoldura.onload = desenharTudo;
+
+    uploadFoto.addEventListener('change', function(e) {
+        const arquivo = e.target.files[0];
+        if (!arquivo) return;
+
+        const leitor = new FileReader();
+        leitor.onload = function(event) {
+            fotoUsuario = new Image();
+            fotoUsuario.onload = function() {
+                const proporcao = fotoUsuario.width / fotoUsuario.height;
+                
+                if (proporcao > 1) {
+                    fotoAltura = raioCírculo * 2;
+                    fotoLargura = fotoAltura * proporcao;
+                } else {
+                    fotoLargura = raioCírculo * 2;
+                    fotoAltura = fotoLargura / proporcao;
+                }
+                
+                fotoX = centroX - (fotoLargura / 2);
+                fotoY = centroY - (fotoAltura / 2);
+                
+                desenharTudo();
+                btnDownload.style.display = 'inline-block';
+            };
+            fotoUsuario.src = event.target.result;
+        };
+        leitor.readAsDataURL(arquivo);
+    });
+
+    function desenharTudo() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        if (fotoUsuario) {
+            // 1. Desenha a foto do usuário recortada no círculo
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(centroX, centroY, raioCírculo, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(fotoUsuario, fotoX, fotoY, fotoLargura, fotoAltura);
+            ctx.restore();
+
+            // 2. Cria uma máscara vazada na moldura (remove o meio)
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(0, 0, canvas.width, canvas.height);
+            ctx.arc(centroX, centroY, raioCírculo - 5, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.clip();
+            
+            // Desenha a parte externa da moldura por cima da foto
+            ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
+
+            // 3. Redesenha a área do logo "FOCO NO FUTURO" por cima de tudo
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(200, 700, 600, 300); // Foco na caixa do logo
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
+        } else {
+            // Se nenhuma foto foi enviada, desenha a moldura normal
+            ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
+        }
+    }
+
+    // --- SISTEMA DE ARRASTAR ---
+    function obterCoordenadas(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clienteX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clienteY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+            x: (clienteX - rect.left) * (canvas.width / rect.width),
+            y: (clienteY - rect.top) * (canvas.height / rect.height)
+        };
+    }
+
+    function iniciarArrasto(e) {
+        if (!fotoUsuario) return;
+        arrastando = true;
+        const coords = obterCoordenadas(e);
+        inicioX = coords.x - fotoX;
+        inicioY = coords.y - fotoY;
+        e.preventDefault();
+    }
+
+    function moverFoto(e) {
+        if (!arrastando) return;
+        const coords = obterCoordenadas(e);
+        fotoX = coords.x - inicioX;
+        fotoY = coords.y - inicioY;
+        desenharTudo();
+        e.preventDefault();
+    }
+
+    function pararArrasto() { arrastando = false; }
+
+    canvas.addEventListener('mousedown', iniciarArrasto);
+    window.addEventListener('mousemove', moverFoto);
+    window.addEventListener('mouseup', pararArrasto);
+    canvas.addEventListener('touchstart', iniciarArrasto, { passive: false });
+    window.addEventListener('touchmove', moverFoto, { passive: false });
+    window.addEventListener('touchend', pararArrasto);
+
+    // --- DOWNLOAD ---
+    btnDownload.addEventListener('click', function() {
+        btnDownload.href = canvas.toDataURL('image/jpeg', 0.95);
+        btnDownload.download = 'foto-foco-no-futuro.jpg';
+    });
+</script>
+
+</body>
+</html>
