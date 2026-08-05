@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Campanha - Maricá Pede Mais</title>
+    <title>Campanha - Foco no Futuro</title>
     <style>
         body { font-family: 'Helvetica Neue', Arial, sans-serif; text-align: center; margin: 0; padding: 15px; background-color: #111; color: #fff; }
         .container { max-width: 450px; margin: 0 auto; background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); box-sizing: border-box; border: 1px solid #333; }
@@ -20,7 +20,7 @@
 <body>
 
 <div class="container">
-    <h2>Foto de Perfil - Maricá Pede Mais</h2>
+    <h2>Foto de Perfil - Foco no Futuro</h2>
     <p>1. Clique no botão amarelo para escolher sua foto.<br>2. Arraste com o dedo ou mouse para enquadrar seu rosto no círculo.<br>3. Clique em baixar.</p>
     
     <label for="uploadFoto" class="btn btn-upload">Selecionar Minha Foto</label>
@@ -45,9 +45,9 @@
     let arrastando = false;
     let inicioX, inicioY;
 
-    // Coordenadas do centro e raio do círculo
+    // Coordenadas do centro do círculo
     const centroX = 500;
-    const centroY = 500;
+    const centroY = 460;
     const raioCírculo = 425;
 
     imagemMoldura.onload = desenharTudo;
@@ -84,28 +84,19 @@
     function desenharTudo() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // 1. Desenha a foto do usuário primeiro (no fundo)
+        // 1. Desenha primeiro a foto do usuário recortada no círculo
         if (fotoUsuario) {
             ctx.save();
+            ctx.beginPath();
+            ctx.arc(centroX, centroY, raioCírculo, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
             ctx.drawImage(fotoUsuario, fotoX, fotoY, fotoLargura, fotoAltura);
             ctx.restore();
         }
         
-        // 2. Desenha a moldura com o centro "vazado" via código
-        ctx.save();
-        ctx.beginPath();
-        // Desenha o retângulo completo da tela
-        ctx.rect(0, 0, canvas.width, canvas.height);
-        // Desenha o círculo no sentido oposto para recortar o meio da moldura
-        ctx.arc(centroX, centroY, raioCírculo, 0, Math.PI * 2, true);
-        ctx.closePath();
-        
-        // Aplica o recorte
-        ctx.clip();
-        
-        // Desenha a moldura apenas na área externa ao círculo
+        // 2. Desenha a moldura por CIMA (com fundo escuro + logo + miolo vazado)
         ctx.drawImage(imagemMoldura, 0, 0, canvas.width, canvas.height);
-        ctx.restore();
     }
 
     // --- SISTEMA DE ARRASTAR ---
@@ -149,7 +140,7 @@
     // --- DOWNLOAD ---
     btnDownload.addEventListener('click', function() {
         btnDownload.href = canvas.toDataURL('image/jpeg', 0.95);
-        btnDownload.download = 'foto-marica-pede-mais.jpg';
+        btnDownload.download = 'foto-foco-no-futuro.jpg';
     });
 </script>
 
